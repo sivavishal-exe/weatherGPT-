@@ -1,0 +1,39 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.sqlite3
+*.db
+
+# Flutter & Dart
+.dart_tool/
+.pub-cache/
+.pub/
+build/
+android/.gradle/
+android/captures/
+android/app/build/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log
+
+WeatherGPT.apk

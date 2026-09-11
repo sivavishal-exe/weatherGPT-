@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: weathergpt_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://weathergpt:securepassword@db:5432/weathergpt_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=weathergpt-super-secret-prod-key-2026
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: weathergpt_postgis
+    environment:
+      POSTGRES_USER: weathergpt
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: weathergpt_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: weathergpt_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
