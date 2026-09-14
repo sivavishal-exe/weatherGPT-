@@ -22,86 +22,98 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  final String baseUrl;
+  String baseUrl;
   final http.Client client;
 
   ApiService({
-    this.baseUrl = AppConstants.apiBaseUrl,
+    String? baseUrl,
     http.Client? client,
-  }) : client = client ?? http.Client();
+  })  : baseUrl = baseUrl ?? AppConstants.apiBaseUrl,
+        client = client ?? http.Client();
 
-  /// Centralized HTTP Execution Wrapper with Timeout, Retry, and Error Handling
+  /// Centralized HTTP Execution Wrapper with Timeout, Retry, and Multi-URL Fallback
   Future<http.Response> _executeWithRetry(
-    Future<http.Response> Function() requestFn, {
+    Future<http.Response> Function(String activeBaseUrl) requestFn, {
     int maxRetries = 2,
     Duration timeout = const Duration(seconds: 10),
   }) async {
-    int attempt = 0;
-    while (attempt <= maxRetries) {
-      attempt++;
-      try {
-        final response = await requestFn().timeout(timeout);
-        
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          return response;
-        }
+    final List<String> fallbackUrls = [
+      baseUrl,
+      if (baseUrl != AppConstants.emulatorApiUrl) AppConstants.emulatorApiUrl,
+      if (baseUrl != AppConstants.localFallbackApiUrl) AppConstants.localFallbackApiUrl,
+    ];
 
-        // Parse structured error payload if available
-        String errorMessage = 'HTTP ${response.statusCode} Error';
-        String errorType = 'HttpError';
-
+    for (final targetUrl in fallbackUrls) {
+      int attempt = 0;
+      while (attempt <= maxRetries) {
+        attempt++;
         try {
-          final jsonMap = jsonDecode(response.body);
-          if (jsonMap is Map && jsonMap.containsKey('error')) {
-            final err = jsonMap['error'];
-            errorMessage = err['message'] ?? errorMessage;
-            errorType = err['type'] ?? errorType;
+          baseUrl = targetUrl;
+          final response = await requestFn(targetUrl).timeout(timeout);
+          
+          if (response.statusCode >= 200 && response.statusCode < 300) {
+            return response;
           }
-        } catch (_) {
-          // Fall back to raw response body if not JSON
-          if (response.body.isNotEmpty) {
-            errorMessage = response.body;
-          }
-        }
 
-        // Handle specific status codes
-        switch (response.statusCode) {
-          case 400:
-            throw ApiException(statusCode: 400, message: errorMessage, errorType: 'BadRequest');
-          case 401:
-            throw ApiException(statusCode: 401, message: 'Unauthorized access. Please login.', errorType: 'Unauthorized');
-          case 403:
-            throw ApiException(statusCode: 403, message: 'Access forbidden.', errorType: 'Forbidden');
-          case 429:
-            throw ApiException(statusCode: 429, message: 'Rate limit exceeded. Please wait.', errorType: 'RateLimitExceeded');
-          case 500:
-          case 502:
-          case 503:
-          case 504:
-            if (attempt <= maxRetries) {
-              await Future.delayed(Duration(milliseconds: 300 * attempt));
-              continue;
+          // Parse structured error payload if available
+          String errorMessage = 'HTTP ${response.statusCode} Error';
+          String errorType = 'HttpError';
+
+          try {
+            final jsonMap = jsonDecode(response.body);
+            if (jsonMap is Map && jsonMap.containsKey('error')) {
+              final err = jsonMap['error'];
+              errorMessage = err['message'] ?? errorMessage;
+              errorType = err['type'] ?? errorType;
             }
-            throw ApiException(statusCode: response.statusCode, message: 'Server unavailable: $errorMessage', errorType: 'ServerUnavailable');
-          default:
-            throw ApiException(statusCode: response.statusCode, message: errorMessage, errorType: errorType);
+          } catch (_) {
+            if (response.body.isNotEmpty) {
+              errorMessage = response.body;
+            }
+          }
+
+          switch (response.statusCode) {
+            case 400:
+              throw ApiException(statusCode: 400, message: errorMessage, errorType: 'BadRequest');
+            case 401:
+              throw ApiException(statusCode: 401, message: 'Unauthorized access. Please login.', errorType: 'Unauthorized');
+            case 403:
+              throw ApiException(statusCode: 403, message: 'Access forbidden.', errorType: 'Forbidden');
+            case 429:
+              throw ApiException(statusCode: 429, message: 'Rate limit exceeded. Please wait.', errorType: 'RateLimitExceeded');
+            case 500:
+            case 502:
+            case 503:
+            case 504:
+              if (attempt <= maxRetries) {
+                await Future.delayed(Duration(milliseconds: 300 * attempt));
+                continue;
+              }
+              throw ApiException(statusCode: response.statusCode, message: 'Server unavailable: $errorMessage', errorType: 'ServerUnavailable');
+            default:
+              throw ApiException(statusCode: response.statusCode, message: errorMessage, errorType: errorType);
+          }
+        } on TimeoutException {
+          if (attempt <= maxRetries) {
+            await Future.delayed(Duration(milliseconds: 300 * attempt));
+            continue;
+          }
+          break; // Try next fallback URL if available
+        } on SocketException {
+          break; // Host unreachable on this URL, try next fallback URL
+        } on FormatException {
+          throw ApiException(statusCode: 422, message: 'Malformed JSON response from server.', errorType: 'MalformedResponse');
+        } catch (e) {
+          if (e is ApiException) rethrow;
+          break;
         }
-      } on TimeoutException {
-        if (attempt <= maxRetries) {
-          await Future.delayed(Duration(milliseconds: 300 * attempt));
-          continue;
-        }
-        throw ApiException(statusCode: 408, message: 'Connection timed out. Please check your network.', errorType: 'Timeout');
-      } on SocketException {
-        throw ApiException(statusCode: 0, message: 'No internet connection available.', errorType: 'NoInternet');
-      } on FormatException {
-        throw ApiException(statusCode: 422, message: 'Malformed JSON response from server.', errorType: 'MalformedResponse');
-      } catch (e) {
-        if (e is ApiException) rethrow;
-        throw ApiException(statusCode: 500, message: 'Unexpected connection error: $e', errorType: 'NetworkError');
       }
     }
-    throw ApiException(statusCode: 503, message: 'Service unavailable after retries', errorType: 'ServiceUnavailable');
+    throw ApiException(
+      statusCode: 0,
+      message: 'Unable to reach backend server at $baseUrl or fallback hosts. Ensure backend is running.',
+      errorType: 'NoInternet',
+    );
   }
 
   /// GET /api/v1/weather (alias for sync_service)
@@ -129,15 +141,16 @@ class ApiService {
       queryParams['location_name'] = locationName;
     }
 
-    final uri = Uri.parse('$baseUrl/weather').replace(queryParameters: queryParams);
-
-    final response = await _executeWithRetry(() => client.get(
-          uri,
-          headers: {
-            'Accept': 'application/json',
-            'X-Low-Bandwidth': lowBandwidth ? 'true' : 'false',
-          },
-        ));
+    final response = await _executeWithRetry((activeUrl) {
+      final uri = Uri.parse('$activeUrl/weather').replace(queryParameters: queryParams);
+      return client.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'X-Low-Bandwidth': lowBandwidth ? 'true' : 'false',
+        },
+      );
+    });
 
     try {
       final jsonMap = jsonDecode(response.body);
@@ -163,12 +176,13 @@ class ApiService {
       queryParams['location_name'] = locationName;
     }
 
-    final uri = Uri.parse('$baseUrl/forecast').replace(queryParameters: queryParams);
-
-    final response = await _executeWithRetry(() => client.get(
-          uri,
-          headers: {'Accept': 'application/json'},
-        ));
+    final response = await _executeWithRetry((activeUrl) {
+      final uri = Uri.parse('$activeUrl/forecast').replace(queryParameters: queryParams);
+      return client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
+    });
 
     try {
       final List list = jsonDecode(response.body);
@@ -188,12 +202,13 @@ class ApiService {
       'longitude': longitude.toString(),
     };
 
-    final uri = Uri.parse('$baseUrl/alerts').replace(queryParameters: queryParams);
-
-    final response = await _executeWithRetry(() => client.get(
-          uri,
-          headers: {'Accept': 'application/json'},
-        ));
+    final response = await _executeWithRetry((activeUrl) {
+      final uri = Uri.parse('$activeUrl/alerts').replace(queryParameters: queryParams);
+      return client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
+    });
 
     try {
       final List list = jsonDecode(response.body);
@@ -212,7 +227,6 @@ class ApiService {
     String language = 'en',
     bool lowBandwidth = false,
   }) async {
-    final uri = Uri.parse('$baseUrl/chat');
     final bodyMap = {
       'query': query,
       'latitude': latitude,
@@ -223,14 +237,17 @@ class ApiService {
     };
 
     final response = await _executeWithRetry(
-      () => client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(bodyMap),
-      ),
+      (activeUrl) {
+        final uri = Uri.parse('$activeUrl/chat');
+        return client.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(bodyMap),
+        );
+      },
       timeout: const Duration(seconds: 15),
     );
 
@@ -254,12 +271,13 @@ class ApiService {
       'month': month.toString(),
     };
 
-    final uri = Uri.parse('$baseUrl/climate').replace(queryParameters: queryParams);
-
-    final response = await _executeWithRetry(() => client.get(
-          uri,
-          headers: {'Accept': 'application/json'},
-        ));
+    final response = await _executeWithRetry((activeUrl) {
+      final uri = Uri.parse('$activeUrl/climate').replace(queryParameters: queryParams);
+      return client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
+    });
 
     try {
       return jsonDecode(response.body) as Map<String, dynamic>;

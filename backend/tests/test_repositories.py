@@ -7,13 +7,7 @@ from app.repositories import (
 )
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def setup_test_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+# Using global database setup from conftest.py
 
 
 @pytest.mark.asyncio

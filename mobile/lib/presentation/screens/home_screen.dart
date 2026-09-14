@@ -3,6 +3,7 @@ import '../../core/theme.dart';
 import '../../core/offline_cache.dart';
 import '../../models/weather_model.dart';
 import '../../services/weather_repository.dart';
+import '../../services/location_service.dart';
 import '../widgets/weather_card.dart';
 import '../widgets/alert_banner.dart';
 import 'chat_screen.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final WeatherRepository _repository = WeatherRepository();
   WeatherDataResponse? _weatherData;
+  UserLocationResult? _currentLocation;
   bool _isLoading = true;
   bool _lowBandwidth = false;
   String _errorMessage = '';
@@ -36,13 +38,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // Default to Tokyo or user coordinates
+      // 1. Acquire current user location safely (handles permissions, GPS state, and timeouts without crashing)
+      final locationResult = await LocationService.getCurrentUserLocation();
+      _currentLocation = locationResult;
+
+      // 2. Retrieve weather data for resolved location
       final data = await _repository.getWeather(
-        latitude: 35.6762,
-        longitude: 139.6503,
-        locationName: 'Tokyo, Japan',
+        latitude: locationResult.latitude,
+        longitude: locationResult.longitude,
+        locationName: locationResult.locationName,
         lowBandwidth: _lowBandwidth,
       );
+
       setState(() {
         _weatherData = data;
         _isLoading = false;
@@ -69,6 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('WeatherGPT Intelligence'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.my_location, color: AppTheme.accentCyan),
+            tooltip: 'Refresh Location & Weather',
+            onPressed: _loadInitialData,
+          ),
           Row(
             children: [
               const Icon(Icons.network_cell, size: 16, color: AppTheme.accentCyan),
@@ -98,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadInitialData,
-                          child: const Text('Retry'),
+                          child: const Text('Retry Location & Weather'),
                         )
                       ],
                     ),
@@ -108,6 +120,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   onRefresh: _loadInitialData,
                   child: ListView(
                     children: [
+                      // GPS Location Status Banner
+                      if (_currentLocation != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          color: _currentLocation!.isGpsLocation ? AppTheme.cardDark : Colors.amber.shade900.withOpacity(0.4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _currentLocation!.isGpsLocation ? Icons.gps_fixed : Icons.gps_off,
+                                size: 16,
+                                color: _currentLocation!.isGpsLocation ? AppTheme.accentCyan : Colors.amberAccent,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _currentLocation!.statusMessage ?? _currentLocation!.locationName,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _currentLocation!.isGpsLocation ? AppTheme.textMuted : Colors.amberAccent,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _loadInitialData,
+                                child: const Text('Refresh GPS', style: TextStyle(fontSize: 11, color: AppTheme.accentCyan)),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       if (_weatherData!.officialAlerts.isNotEmpty)
                         ..._weatherData!.officialAlerts.map((a) => AlertBanner(alert: a)),
                       WeatherCard(weather: _weatherData!),

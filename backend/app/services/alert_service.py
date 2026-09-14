@@ -76,12 +76,12 @@ class AlertRiskEngine:
             wind_desc = f"Severe tropical cyclone/hurricane conditions (Pressure {pressure:.1f} hPa, Wind {wind:.1f} km/h, Gusts {gust:.1f} km/h)."
             detected_hazards.append(WeatherHazardType.CYCLONE)
             detected_hazards.append(WeatherHazardType.STRONG_WIND)
-        elif wind >= 90.0 or gust >= 110.0:
-            wind_score = 55.0
+        elif wind >= 80.0 or gust >= 100.0:
+            wind_score = 45.0
             wind_desc = f"Extreme storm-force winds ({wind:.1f} km/h, Gusts {gust:.1f} km/h) capable of structural damage."
             detected_hazards.append(WeatherHazardType.STRONG_WIND)
-        elif wind >= 75.0 or gust >= 90.0:
-            wind_score = 35.0
+        elif wind >= 60.0 or gust >= 80.0:
+            wind_score = 30.0
             wind_desc = f"Severe high wind danger ({wind:.1f} km/h)."
             detected_hazards.append(WeatherHazardType.STRONG_WIND)
         elif wind >= 50.0 or gust >= 70.0:

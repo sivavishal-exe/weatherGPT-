@@ -26,11 +26,19 @@ class _AlertsScreenState extends State<AlertsScreen> {
   Future<void> _loadAlerts() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _repository.getWeather(latitude: 39.7392, longitude: -104.9903, locationName: 'Denver, USA');
-      setState(() {
-        _alerts = data.officialAlerts;
-        _isLoading = false;
-      });
+      final alerts = await _repository.getAlerts(latitude: 9.8717, longitude: 77.2856);
+      if (alerts.isNotEmpty) {
+        setState(() {
+          _alerts = alerts;
+          _isLoading = false;
+        });
+      } else {
+        final data = await _repository.getWeather(latitude: 9.8717, longitude: 77.2856);
+        setState(() {
+          _alerts = data.officialAlerts;
+          _isLoading = false;
+        });
+      }
     } catch (_) {
       setState(() => _isLoading = false);
     }

@@ -4,6 +4,8 @@ import '../../models/weather_model.dart';
 import '../../services/weather_repository.dart';
 import '../widgets/empty_state.dart';
 
+import '../../services/location_service.dart';
+
 class ForecastScreen extends StatefulWidget {
   const ForecastScreen({Key? key}) : super(key: key);
 
@@ -25,7 +27,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
   Future<void> _loadForecast() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _repository.getWeather(latitude: 35.6762, longitude: 139.6503, locationName: 'Tokyo, Japan');
+      final loc = await LocationService.getCurrentUserLocation();
+      final data = await _repository.getWeather(
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        locationName: loc.locationName,
+      );
       setState(() {
         _weatherData = data;
         _isLoading = false;

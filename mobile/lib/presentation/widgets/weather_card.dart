@@ -71,12 +71,16 @@ class WeatherCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  current.conditionText,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textMuted,
+                Expanded(
+                  child: Text(
+                    current.conditionText,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textMuted,
+                    ),
                   ),
                 ),
               ],

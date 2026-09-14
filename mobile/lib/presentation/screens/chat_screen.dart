@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
+import '../../services/location_service.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/voice_input_widget.dart';
 
@@ -20,15 +21,15 @@ class ChatMessageItem {
 }
 
 class ChatScreen extends StatefulWidget {
-  final String locationName;
-  final double latitude;
-  final double longitude;
+  final String? locationName;
+  final double? latitude;
+  final double? longitude;
 
   const ChatScreen({
     Key? key,
-    required this.locationName,
-    required this.latitude,
-    required this.longitude,
+    this.locationName,
+    this.latitude,
+    this.longitude,
   }) : super(key: key);
 
   @override
@@ -40,15 +41,36 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final List<ChatMessageItem> _messages = [];
   bool _isSending = false;
+  String _activeLocationName = 'your location';
+  double? _activeLat;
+  double? _activeLon;
 
   @override
   void initState() {
     super.initState();
-    // Welcome message
-    _messages.add(ChatMessageItem(
-      text: 'Hello! I am WeatherGPT. Ask me anything about current weather, forecasts, or safety advisories for ${widget.locationName}. All facts are verified directly from meteorological services.',
-      isUser: false,
-    ));
+    _initLocationAndWelcome();
+  }
+
+  Future<void> _initLocationAndWelcome() async {
+    if (widget.latitude != null && widget.longitude != null) {
+      _activeLat = widget.latitude;
+      _activeLon = widget.longitude;
+      _activeLocationName = widget.locationName ?? 'Selected Location';
+    } else {
+      final loc = await LocationService.getCurrentUserLocation();
+      _activeLat = loc.latitude;
+      _activeLon = loc.longitude;
+      _activeLocationName = loc.locationName;
+    }
+
+    if (mounted) {
+      setState(() {
+        _messages.add(ChatMessageItem(
+          text: 'Hello! I am WeatherGPT. Ask me anything about current weather, forecasts, or safety advisories for $_activeLocationName. All facts are verified directly from meteorological services.',
+          isUser: false,
+        ));
+      });
+    }
   }
 
   @override
@@ -69,9 +91,9 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final response = await _apiService.sendChatMessage(
         query: text,
-        latitude: widget.latitude,
-        longitude: widget.longitude,
-        locationName: widget.locationName,
+        latitude: _activeLat,
+        longitude: _activeLon,
+        locationName: _activeLocationName,
       );
 
       setState(() {

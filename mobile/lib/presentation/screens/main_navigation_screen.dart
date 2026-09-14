@@ -8,6 +8,11 @@ import 'map_screen.dart';
 import 'climate_screen.dart';
 import 'locations_screen.dart';
 import 'settings_screen.dart';
+import 'profile_screen.dart';
+import 'auth_screen.dart';
+import 'onboarding_screen.dart';
+import 'language_screen.dart';
+import 'voice_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({Key? key}) : super(key: key);
@@ -22,7 +27,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const ForecastScreen(),
-    const ChatScreen(locationName: 'Tokyo, Japan', latitude: 35.6762, longitude: 139.6503),
+    const ChatScreen(),
     const AlertsScreen(),
     const MapScreen(),
   ];
@@ -40,8 +45,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Icon(Icons.thunderstorm, size: 48, color: AppTheme.accentCyan),
-                  SizedBox(height: 12),
+                  Icon(Icons.thunderstorm, size: 44, color: AppTheme.accentCyan),
+                  SizedBox(height: 8),
                   Text('WeatherGPT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                   Text('AI Weather Intelligence', style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
                 ],
@@ -89,6 +94,38 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             const Divider(),
             ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('User Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.login),
+              title: const Text('Login / Register'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AuthScreen()));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mic_none),
+              title: const Text('Voice Assistant Studio'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const VoiceScreen()));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageScreen()));
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.show_chart),
               title: const Text('Climate Analytics'),
               onTap: () {
@@ -102,6 +139,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedLocationsScreen()));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.explore_outlined),
+              title: const Text('Onboarding Tour'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const OnboardingScreen()));
               },
             ),
             ListTile(

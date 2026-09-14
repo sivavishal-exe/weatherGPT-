@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/offline_cache.dart';
+import 'language_screen.dart';
+import 'profile_screen.dart';
+import 'voice_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onThemeToggle;
@@ -61,6 +64,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _notificationsEnabled,
             activeTrackColor: AppTheme.accentCyan,
             onChanged: (val) => setState(() => _notificationsEnabled = val),
+          ),
+          const Divider(height: 32),
+          const Text('Account & Localization', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.accentCyan)),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: const Text('User Profile'),
+            subtitle: const Text('Manage account details & active session'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('Language Settings'),
+            subtitle: const Text('Select application display language'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LanguageScreen())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.mic_none),
+            title: const Text('Voice Assistant Studio'),
+            subtitle: const Text('Configure speech input & voice recognition'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const VoiceScreen())),
           ),
           const Divider(height: 32),
           const Text('Data & Cache Management', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.accentCyan)),

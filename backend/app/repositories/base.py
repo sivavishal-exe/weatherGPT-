@@ -42,8 +42,16 @@ class BaseRepository(Generic[ModelType]):
             logger.error(f"Error creating {self.model.__tablename__}: {e}")
             raise e
 
-    async def update(self, db: AsyncSession, db_obj: ModelType, obj_in: dict) -> ModelType:
+    async def update(self, db: AsyncSession, db_obj_or_id: Any, obj_in: dict) -> Optional[ModelType]:
         try:
+            if isinstance(db_obj_or_id, (str, int)):
+                db_obj = await self.get_by_id(db, db_obj_or_id)
+            else:
+                db_obj = db_obj_or_id
+
+            if not db_obj:
+                return None
+
             for field, value in obj_in.items():
                 if hasattr(db_obj, field) and value is not None:
                     setattr(db_obj, field, value)

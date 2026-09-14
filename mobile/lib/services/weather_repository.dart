@@ -41,4 +41,19 @@ class WeatherRepository {
       rethrow;
     }
   }
+
+  Future<List<SevereWeatherAlert>> getAlerts({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      return await apiService.fetchAlerts(
+        latitude: latitude,
+        longitude: longitude,
+      );
+    } catch (e) {
+      final cached = await OfflineCache.getCachedWeather();
+      return cached?.officialAlerts ?? [];
+    }
+  }
 }

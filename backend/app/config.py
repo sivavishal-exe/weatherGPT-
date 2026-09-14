@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     OPEN_METEO_BASE_URL: str = "https://api.open-meteo.com/v1"
     NOAA_ALERTS_BASE_URL: str = "https://api.weather.gov"
     OPENWEATHER_API_KEY: Optional[str] = None
+    VISUAL_CROSSING_API_KEY: Optional[str] = None
     
     # Conversational Intelligence / LLM
     LLM_PROVIDER: str = "grounded-weathergpt"  # 'grounded-weathergpt', 'openai', or 'gemini'
