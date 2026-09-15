@@ -19,6 +19,10 @@ class UserLocationResult {
 }
 
 class LocationService {
+  static UserLocationResult? _cachedLocation;
+  static DateTime? _cacheTimestamp;
+  static Future<UserLocationResult>? _inFlightRequest;
+
   /// Default fallback location if GPS is denied, disabled, or times out
   static final UserLocationResult defaultFallback = UserLocationResult(
     latitude: 28.6139,
@@ -31,7 +35,33 @@ class LocationService {
   /// Requests permissions & fetches current GPS coordinates safely without crashing.
   static Future<UserLocationResult> getCurrentUserLocation({
     Duration timeout = const Duration(seconds: 5),
+    bool forceRefresh = false,
   }) async {
+    if (!forceRefresh &&
+        _cachedLocation != null &&
+        _cacheTimestamp != null &&
+        DateTime.now().difference(_cacheTimestamp!) < const Duration(minutes: 5)) {
+      return _cachedLocation!;
+    }
+
+    if (_inFlightRequest != null) {
+      return await _inFlightRequest!;
+    }
+
+    _inFlightRequest = _fetchLocationInternal(timeout);
+    try {
+      final res = await _inFlightRequest!;
+      if (res.isGpsLocation) {
+        _cachedLocation = res;
+        _cacheTimestamp = DateTime.now();
+      }
+      return res;
+    } finally {
+      _inFlightRequest = null;
+    }
+  }
+
+  static Future<UserLocationResult> _fetchLocationInternal(Duration timeout) async {
     try {
       // 1. Check if location services are enabled on device
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../services/voice_service.dart';
+import 'chat_screen.dart';
 
 class VoiceScreen extends StatefulWidget {
   const VoiceScreen({Key? key}) : super(key: key);
@@ -108,6 +109,27 @@ class _VoiceScreenState extends State<VoiceScreen> {
                 style: const TextStyle(fontSize: 16, color: AppTheme.textLight),
               ),
             ),
+            if (_recognizedText.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accentCyan,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Ask WeatherGPT AI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(initialQuery: _recognizedText),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),

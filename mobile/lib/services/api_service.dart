@@ -34,13 +34,13 @@ class ApiService {
   /// Centralized HTTP Execution Wrapper with Timeout, Retry, and Multi-URL Fallback
   Future<http.Response> _executeWithRetry(
     Future<http.Response> Function(String activeBaseUrl) requestFn, {
-    int maxRetries = 2,
-    Duration timeout = const Duration(seconds: 10),
+    int maxRetries = 1,
+    Duration timeout = const Duration(seconds: 5),
   }) async {
     final List<String> fallbackUrls = [
       baseUrl,
-      if (baseUrl != AppConstants.emulatorApiUrl) AppConstants.emulatorApiUrl,
       if (baseUrl != AppConstants.localFallbackApiUrl) AppConstants.localFallbackApiUrl,
+      if (baseUrl != AppConstants.emulatorApiUrl) AppConstants.emulatorApiUrl,
     ];
 
     for (final targetUrl in fallbackUrls) {
@@ -248,7 +248,7 @@ class ApiService {
           body: jsonEncode(bodyMap),
         );
       },
-      timeout: const Duration(seconds: 15),
+      timeout: const Duration(seconds: 8),
     );
 
     try {

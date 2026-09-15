@@ -21,6 +21,7 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Roboto',
       brightness: Brightness.dark,
       scaffoldBackgroundColor: bgDark,
       colorScheme: const ColorScheme.dark(
@@ -36,11 +37,18 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16.0),
         ),
       ),
+      textTheme: ThemeData.dark().textTheme.apply(
+        fontFamily: 'Roboto',
+      ),
+      primaryTextTheme: ThemeData.dark().primaryTextTheme.apply(
+        fontFamily: 'Roboto',
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: bgDark,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
+          fontFamily: 'Roboto',
           color: textLight,
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -51,6 +59,8 @@ class AppTheme {
         selectedItemColor: accentCyanLight,
         unselectedItemColor: textMuted,
         type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: TextStyle(fontFamily: 'Roboto'),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Roboto'),
       ),
     );
   }
@@ -59,6 +69,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Roboto',
       brightness: Brightness.light,
       scaffoldBackgroundColor: bgLight,
       colorScheme: const ColorScheme.light(
@@ -74,12 +85,19 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16.0),
         ),
       ),
+      textTheme: ThemeData.light().textTheme.apply(
+        fontFamily: 'Roboto',
+      ),
+      primaryTextTheme: ThemeData.light().primaryTextTheme.apply(
+        fontFamily: 'Roboto',
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: bgLight,
         elevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: textDark),
         titleTextStyle: TextStyle(
+          fontFamily: 'Roboto',
           color: textDark,
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -90,6 +108,8 @@ class AppTheme {
         selectedItemColor: accentCyan,
         unselectedItemColor: textDarkMuted,
         type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: TextStyle(fontFamily: 'Roboto'),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Roboto'),
       ),
     );
   }

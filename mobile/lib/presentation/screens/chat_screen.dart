@@ -24,12 +24,14 @@ class ChatScreen extends StatefulWidget {
   final String? locationName;
   final double? latitude;
   final double? longitude;
+  final String? initialQuery;
 
   const ChatScreen({
     Key? key,
     this.locationName,
     this.latitude,
     this.longitude,
+    this.initialQuery,
   }) : super(key: key);
 
   @override
@@ -70,6 +72,9 @@ class _ChatScreenState extends State<ChatScreen> {
           isUser: false,
         ));
       });
+      if (widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) {
+        _sendMessage(widget.initialQuery!);
+      }
     }
   }
 
@@ -120,7 +125,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('WeatherGPT • ${widget.locationName}'),
+        title: Text(widget.locationName != null && widget.locationName!.isNotEmpty
+            ? 'WeatherGPT • ${widget.locationName}'
+            : 'WeatherGPT Assistant'),
       ),
       body: Column(
         children: [

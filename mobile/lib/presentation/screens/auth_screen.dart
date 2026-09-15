@@ -56,7 +56,17 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.security, size: 64, color: AppTheme.accentCyan),
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               _isLogin ? 'Welcome Back' : 'Create WeatherGPT Account',

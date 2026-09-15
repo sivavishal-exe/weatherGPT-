@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/weather_model.dart';
 import '../../services/weather_repository.dart';
+import '../../services/location_service.dart';
 import '../widgets/alert_banner.dart';
 import '../widgets/empty_state.dart';
 
@@ -26,14 +27,15 @@ class _AlertsScreenState extends State<AlertsScreen> {
   Future<void> _loadAlerts() async {
     setState(() => _isLoading = true);
     try {
-      final alerts = await _repository.getAlerts(latitude: 9.8717, longitude: 77.2856);
+      final loc = await LocationService.getCurrentUserLocation();
+      final alerts = await _repository.getAlerts(latitude: loc.latitude, longitude: loc.longitude);
       if (alerts.isNotEmpty) {
         setState(() {
           _alerts = alerts;
           _isLoading = false;
         });
       } else {
-        final data = await _repository.getWeather(latitude: 9.8717, longitude: 77.2856);
+        final data = await _repository.getWeather(latitude: loc.latitude, longitude: loc.longitude);
         setState(() {
           _alerts = data.officialAlerts;
           _isLoading = false;

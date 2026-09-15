@@ -22,19 +22,27 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ForecastScreen(),
-    const ChatScreen(),
-    const AlertsScreen(),
-    const MapScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(onMenuPressed: () => _scaffoldKey.currentState?.openDrawer()),
+      const ForecastScreen(),
+      const ChatScreen(),
+      const AlertsScreen(),
+      const MapScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -44,11 +52,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.thunderstorm, size: 44, color: AppTheme.accentCyan),
-                  SizedBox(height: 8),
-                  Text('WeatherGPT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                  Text('AI Weather Intelligence', style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('WeatherGPT', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const Text('AI Weather Intelligence', style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
                 ],
               ),
             ),

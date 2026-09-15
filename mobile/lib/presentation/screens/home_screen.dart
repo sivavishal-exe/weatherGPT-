@@ -9,7 +9,9 @@ import '../widgets/alert_banner.dart';
 import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final VoidCallback? onMenuPressed;
+
+  const HomeScreen({Key? key, this.onMenuPressed}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -31,9 +33,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadInitialData() async {
     final lb = await OfflineCache.isLowBandwidthMode();
+    final cached = await OfflineCache.getCachedWeather();
     setState(() {
       _lowBandwidth = lb;
-      _isLoading = true;
+      if (cached != null) {
+        _weatherData = cached;
+        _isLoading = false;
+      } else {
+        _isLoading = true;
+      }
       _errorMessage = '';
     });
 
@@ -74,7 +82,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WeatherGPT Intelligence'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: AppTheme.accentCyan),
+          tooltip: 'Menu',
+          onPressed: widget.onMenuPressed,
+        ),
+        title: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 28,
+                height: 28,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('WeatherGPT', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location, color: AppTheme.accentCyan),
@@ -156,53 +183,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       WeatherCard(weather: _weatherData!),
                       
                       // AI Assistant Prompt Banner
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardDark,
-                          borderRadius: BorderRadius.circular(16.0),
-                          border: Border.all(color: AppTheme.accentCyan.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.psychology, size: 36, color: AppTheme.accentCyan),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    'Ask WeatherGPT AI',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.textLight,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Verified weather facts, travel advice, & safety',
-                                    style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
-                                  ),
-                                ],
+                      InkWell(
+                        borderRadius: BorderRadius.circular(16.0),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                locationName: _weatherData!.location.name,
+                                latitude: _weatherData!.location.latitude,
+                                longitude: _weatherData!.location.longitude,
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.arrow_forward_ios, color: AppTheme.accentCyan),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChatScreen(
-                                      locationName: _weatherData!.location.name,
-                                      latitude: _weatherData!.location.latitude,
-                                      longitude: _weatherData!.location.longitude,
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardDark,
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(color: AppTheme.accentCyan.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.psychology, size: 36, color: AppTheme.accentCyan),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Ask WeatherGPT AI',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textLight,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            )
-                          ],
+                                    Text(
+                                      'Verified weather facts, travel advice, & safety',
+                                      style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios, size: 18, color: AppTheme.accentCyan),
+                            ],
+                          ),
                         ),
                       ),
                       

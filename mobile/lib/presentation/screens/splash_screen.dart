@@ -49,15 +49,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(24.0),
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.accentCyan.withOpacity(0.15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentCyan.withOpacity(0.25),
+                      blurRadius: 24,
+                      spreadRadius: 4,
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.thunderstorm,
-                  size: 80,
-                  color: AppTheme.accentCyan,
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

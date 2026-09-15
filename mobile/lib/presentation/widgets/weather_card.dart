@@ -42,10 +42,10 @@ class WeatherCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      weather.cached ? 'Offline Cached Weather' : weather.dataSource,
+                      weather.dataSource.contains('Offline') ? 'Offline Cached Weather' : weather.dataSource,
                       style: TextStyle(
                         fontSize: 12,
-                        color: weather.cached ? AppTheme.advisoryAmber : AppTheme.accentCyan,
+                        color: weather.dataSource.contains('Offline') ? AppTheme.advisoryAmber : AppTheme.accentCyan,
                       ),
                     ),
                   ],
